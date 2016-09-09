@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,user-scalable=no" />
+		<title></title>
+		<link rel="stylesheet" href="statics/css/common.css">
+		<style>
+			html, body{
+				height: 100%;
+				width: 100%
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="canvas" style="background: url(statics/img/p_04.jpg) 0 0 no-repeat; background-size: cover; width: 100%; ">
+           <p>you browser not support canvas!<p>
+       </canvas>
+       <script src='statics/js/utils.js'></script>
+       <script>
+       		window.onload = function(){
+       			var canvas = document.getElementById('canvas'),
+       				ctx = canvas.getContext('2d');
+       				mouse = utils.captureMouse(canvas),
+       				_radius = .6,
+       				_mouseR = 100;
+       			
+       			function resizeCanvas() {
+					canvas.width = document.body.offsetWidth;
+       				canvas.height = document.body.offsetHeight;
+       				// canvas.width = window.innerWidth;
+       				// canvas.height = window.innerHeight;
+					redraw();
+				}
+				window.addEventListener('resize', resizeCanvas);
+
+				function redraw() {
+					ctx.clearRect(0, 0, canvas.width, canvas.height);
+					ctx.fillStyle = "rgba(0,0,0,0)";
+					ctx.fillRect(0, 0, canvas.width, canvas.height);
+				}
+				resizeCanvas();
+
+       			function Ball() {
+					this.x = 0;
+					this.y = 0;
+					this.vx = Math.random() * .6 * ( Math.random() > .5 ? -1 : 1);
+					this.vy = Math.random() * .6 * ( Math.random() > .5 ? -1 : 1);
+					this.radius = _radius;
+					this.mass = 1;
+					this.scaleX = 1;
+					this.scaleY = 1;
+					this.name = "";
+					// this.color = '#'+Math.floor(Math.random()*16777215).toString(16);
+					this.color = 'rgba(255,255,255, .6)';
+					this.lineWidth = 1;
+				}
+
+       			function Ani(){
+       				this.bounce = -1;
+       				this.w = canvas.width;
+	                this.h = canvas.height;
+       				// this.randomNum = Math.random() * (this.w / _radius / 2) / 8; 
+       				this.randomNum = Math.random() * (this.w / 5); 
+       				// this.randomNum = 3;
+   					this.arrary = [];
+       				this.init();
+       				this.mouseBall = {
+       					x: mouse.x,
+						y: mouse.y,
+						radius: _mouseR,
+						mass: 10,
+						id: -1,
+						// this.color = '#'+Math.floor(Math.random()*16777215).toString(16);
+						color: 'rgba(255,255,255, .6)',
+						lineWidth: 1
+       				}
+       			}       			
+       			Ani.prototype.render = function(index){
+					var ball = new Ball();
+					ball.id = index;   //给每个小球一个id
+					ball.x = Math.random() * this.w;   //给每个小球一个id
+					ball.y = Math.random() * this.h;   //给每个小球一个id
+					this.arrary.push(ball); //push进数组
+       			}
+       			Ani.prototype.init = function(){
+       				for(var i = 0, len = this.randomNum; i < len; i++){
+						this.render(i);
+					}
+       			}
+				Ani.prototype.wallCollsion = function(ball){
+	                if(ball.x + ball.radius > this.w){
+	                    ball.x = this.w - ball.radius;
+	                    ball.vx *= this.bounce;
+	                }else if(ball.x < ball.radius){
+	                    ball.x = ball.radius;
+	                    ball.vx *= this.bounce;
+	                }
+	                
+	                if(ball.y + ball.radius > this.h){
+	                    ball.y = this.h - ball.radius;
+	                    ball.vy *= this.bounce;
+	                }else if(ball.y < ball.radius){
+	                    ball.y = ball.radius;
+	                    ball.vy *= this.bounce;
+	                } 
+	            }
+	            Ani.prototype.collisionCal = function(ball1, ball2){
+	            	var dx = ball2.x - ball1.x,
+	                    dy = ball2.y - ball1.y,
+	                    dist = Math.sqrt(dx*dx + dy*dy);
+
+	            	if(dist - ball1.radius - ball2.radius < -ball2.radius / 2 ){
+	                	if(ball2.x > ball1.x){
+	                		ball2.x += ball2.radius;
+	                		ball1.x -= ball1.radius;
+	                	}else{
+	                		ball2.x -= ball2.radius;
+	                		ball1.x += ball1.radius;
+	                	}
+	                	dx = ball2.x - ball1.x,
+	                    dy = ball2.y - ball1.y,
+	                    dist = Math.sqrt(dx*dx + dy*dy);
+	                }
+
+	                if(dist <= ball1.radius + ball2.radius){
+	                    //calculate angle, sine, and cosine
+	                      var angle = Math.atan2(dy, dx),
+	                          sin = Math.sin(angle),
+	                          cos = Math.cos(angle),
+	                          //rotate ball1's position
+	                          x1 = 0,
+	                          y1 = 0,
+	                          //rotate ball2's position
+	                          x2 = dx * cos + dy * sin,
+	                          y2 = dy * cos - dx * sin,
+	                          //rotate ball1's velocity
+	                          vx1 = ball1.vx * cos + ball1.vy * sin,
+	                          vy1 = ball1.vy * cos - ball1.vx * sin,
+	                          //rotate ball2's velocity
+	                          vx2 = ball2.vx * cos + ball2.vy * sin,
+	                          vy2 = ball2.vy * cos - ball2.vx * sin;
+	                          //collision reaction
+	                          vxTotal = vx1 - vx2;
+
+	                      var _vx1 = ((ball1.mass - ball2.mass) * vx1 + 2 * ball2.mass * vx2) /
+	                            (ball1.mass + ball2.mass);//守恒定律 碰撞后速度
+
+	                      var _vx2 = ((ball2.mass - ball1.mass) * vx2 + 2 * ball1.mass * vx1) /
+	                          (ball1.mass + ball2.mass);//守恒定律 碰撞后速度
+
+	                      // vx2 = vxTotal + vx1;
+	                      x1 += _vx1;
+	                      x2 += _vx2;
+	                      
+	                      return {
+	                      	result: true,
+	                      	x1: 0,
+	                        y1: 0,
+	                        x2: x2,
+	                        y2: y2,
+	                      	_vx1: _vx1,
+	                      	_vx2: _vx2,
+	                      	vy1: vy1,
+	                      	vy2: vy2,
+	                      	sin: sin,
+	                      	cos: cos
+	                      }
+	                }
+	            }
+	            Ani.prototype.ballCollsion = function(ball1, ball2){
+	            	var res = ani.collisionCal(ball1, ball2);
+	            	if(res && res.result){
+						res.x1 += res._vx1;
+						res.x2 += res._vx2;
+						//rotate positions back
+						var x1Final = res.x1 * res.cos - res.y1 * res.sin,
+							y1Final = res.y1 * res.cos + res.x1 * res.sin,
+							x2Final = res.x2 * res.cos - res.y2 * res.sin,
+							y2Final = res.y2 * res.cos + res.x2 * res.sin;
+						//adjust positions to actual screen positions
+						ball2.x = ball1.x + x2Final;
+						ball2.y = ball1.y + y2Final;
+						ball1.x = ball1.x + x1Final;
+						ball1.y = ball1.y + y1Final;
+						//rotate velocities back
+						ball1.vx = res._vx1 * res.cos - res.vy1 * res.sin;
+						ball1.vy = res.vy1 * res.cos + res._vx1 * res.sin;
+						ball2.vx = res._vx2 * res.cos - res.vy2 * res.sin;
+						ball2.vy = res.vy2 * res.cos + res._vx2 * res.sin;
+	            	}
+	            }
+	     //       	Ani.prototype.mouseBallCollsion = function(ball, ball2){
+	     //        	var res = ani.collisionCal(ball, ball2);
+	     //        	if(res && res.result){
+						// res.x2 += res._vx2;
+						// //rotate positions back
+						// var x2Final = res.x2 * res.cos - res.y2 * res.sin,
+						// 	y2Final = res.y2 * res.cos + res.x2 * res.sin;
+
+						// ball2.x = ball.x + x2Final;
+						// ball2.y = ball.y + y2Final;
+						// ball2.vx = res._vx2 * res.cos - res.vy2 * res.sin;
+						// ball2.vy = res.vy2 * res.cos + res._vx2 * res.sin;
+	     //        	}
+	     //        }
+	            Ani.prototype.move = function(self, index, _arrary) {
+	            	var dx = mouse.x - self.x,
+	                    dy = mouse.y - self.y,
+	                    dist = Math.sqrt(dx*dx + dy*dy);
+	            	self.x += self.vx;
+                	self.y += self.vy;
+       				
+                	//墙体碰撞检测
+                	ani.wallCollsion(self);
+				}
+				 Ani.prototype.draw = function(self, index, _arrary) {
+				 	ctx.save();
+				    ctx.lineWidth = self.lineWidth;
+				    ctx.fillStyle = self.color;
+				    // ctx.strokeStyle = self.color;
+				    ctx.beginPath();
+				    ctx.arc(self.x,self.y,self.radius,0,Math.PI*2,false);
+				    ctx.closePath();
+				    ctx.fill();
+				    // ctx.stroke();
+				    ctx.restore();
+				}
+				Ani.prototype.drawMoseLine = function(ball){
+					var dx = mouse.x - ball.x,
+	                    dy = mouse.y - ball.y,
+	                    dist = Math.sqrt(dx*dx + dy*dy);
+
+	                if(dist < _mouseR){
+		               ctx.save();
+		               ctx.lineWidth = .3;
+	                   ctx.strokeStyle = 'rgba(255,255,255, '+ ( (_mouseR - dist) / _mouseR) +')';
+	                   ctx.beginPath();
+	                   ctx.moveTo(mouse.x, mouse.y);
+	                   ctx.lineTo(ball.x, ball.y);
+	                   ctx.closePath()
+	                   ctx.stroke()
+	                   ctx.restore();
+
+	                   // ball.color = 'rgba(255,255,255, '+ ( (_mouseR - dist) / _mouseR) +')';
+	                }
+					
+				}
+				Ani.prototype.drawLine = function(ball1, ball2){
+					var dx = ball1.x - ball2.x,
+	                    dy = ball1.y - ball2.y,
+	                    dist = Math.sqrt(dx*dx + dy*dy),
+	                    distR = _mouseR / 1.5;
+
+	                if(dist < distR){
+		               ctx.save();
+		               ctx.lineWidth = .3;
+	                   ctx.strokeStyle = 'rgba(255,255,255, '+ ( (distR - dist) / distR) +')';
+	                   ctx.beginPath();
+	                   ctx.moveTo(ball1.x, ball1.y);
+	                   ctx.lineTo(ball2.x, ball2.y);
+	                   ctx.closePath()
+	                   ctx.stroke()
+	                   ctx.restore();
+
+	                   // ball2.color = ball1.color = 'rgba(255,255,255, '+ ( (_mouseR - dist) / _mouseR) +')';
+	                }
+				}
+				Ani.prototype.drawMouseBall = function(){
+					var dx = ani.mouseBall.x - mouse.x,
+	                    dy = ani.mouseBall.y - mouse.y,
+	                    dist = Math.sqrt(dx*dx + dy*dy),
+	                    angle = Math.atan2(dy, dx),//两次移动的角度
+	                    rate = dist / 17; // px/ms 速率， 合速度
+	                ani.mouseBall.vx = rate * Math.cos(angle);
+	                ani.mouseBall.vy = rate * Math.sin(angle);
+					ani.mouseBall.x = mouse.x;
+					ani.mouseBall.y = mouse.y;
+
+					ctx.save();
+				    ctx.lineWidth = ani.mouseBall.lineWidth;
+				    // ctx.fillStyle = ani.mouseBall.color;
+				    ctx.strokeStyle = ani.mouseBall.color;
+				    ctx.beginPath();
+				    ctx.arc(ani.mouseBall.x,ani.mouseBall.y,ani.mouseBall.radius,0,Math.PI*2,false);
+				    ctx.closePath();
+				    // ctx.fill();
+				    ctx.stroke();
+				    ctx.restore();
+				}
+
+				var ani = new Ani();
+
+       			(function drawFram(){
+					window.requestAnimationFrame(drawFram,canvas);
+					ctx.clearRect(0,0,canvas.width,canvas.height);
+
+					// ani.drawMouseBall();
+
+					// ani.drawMouse();
+					ani.arrary.forEach(ani.move);
+					for(var ball1, i=0, len = ani.randomNum - 1; i<len; i++){
+                   		ball1 = ani.arrary[i];
+	                   	for(var ball2, j=i+1; j< ani.randomNum; j++){
+							ball2 = ani.arrary[j];
+							ani.ballCollsion(ball1, ball2);
+							ani.drawLine(ball1, ball2);
+	                   	}
+	                   	// ani.mouseBallCollsion(ani.mouseBall, ball1);
+	                   	ani.drawMoseLine(ball1);
+	               	}
+		               
+		            ani.arrary.forEach(ani.draw);
+	            })();
+       		}
+        </script>
+	</body>
+</html>

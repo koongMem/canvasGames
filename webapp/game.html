@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,user-scalable=no" />
+		<title></title>
+		<link rel="stylesheet" href="statics/css/common.css">
+		<style>
+			html, body{
+				height: 100%;
+				width: 100%
+			}
+			#canvas{
+				cursor: url('statics/img/aim_red.png') 17.5 17.5,auto !important;
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="canvas" style="background: url(statics/img/space.jpg) 0 0 no-repeat; background-size: cover; width: 100%; ">
+           <p>you browser not support canvas!<p>
+       </canvas>
+       <script src='statics/js/utils.js'></script>
+       <script>
+       		window.onload = function(){
+       			var canvas = document.getElementById('canvas'),
+       				ctx = canvas.getContext('2d');
+       				mouse = utils.captureMouse(canvas),
+       				_radius = .6,
+       				_mouseR = 100;
+       			
+       			var booms = [];
+       			function Ani(){
+       				this.boom = new Image();
+       				this.sprite = new Image();
+       				this.w = canvas.width;
+       				this.h = canvas.height;
+       				this.boom.src = 'statics/img/explosion.png';
+       				this.sprite.src = 'statics/img/sprite.png';
+       				this._meteorite = 6;
+       			}
+       			Ani.prototype._boom = function(obj){
+       				var boom = ani.boom;
+
+       				(function(obj){
+       					if(!obj.over){
+       						ctx.save();
+	       					// ctx.translate(ani.w/2,ani.h/2);
+	       					if(obj.iX == undefined){
+	       						obj.iX = 0;
+	       						obj.iY = 0;
+	       					}
+	       					ctx.drawImage(
+		       					boom,
+		       					(obj.iX+= 256),
+		       					obj.iY, 
+		       					256, 
+		       					256, 
+		       					obj.centerX - 128/2, 
+		       					obj.centerY - 128/2, 
+		       					128, 
+		       					128
+		       				);
+							if(obj.iX >= boom.width){
+								obj.iX = 0;
+								obj.iY += 256;
+								if(obj.iY >= boom.height){
+									// break;
+									obj.over = true;
+									return false;
+								}
+							}
+		       				ctx.restore();
+       					}else{
+       						// console.log(obj)
+       					}
+       					
+       				})(obj)
+       			}
+       			function resizeCanvas() {
+					canvas.width = document.body.offsetWidth;
+       				canvas.height = document.body.offsetHeight;
+					redraw();
+				}
+				window.addEventListener('resize', resizeCanvas);
+				window.addEventListener('click', launch);
+
+				function redraw() {
+					if(ani){
+						ani.w = canvas.width;
+						ani.h = canvas.height;
+					}
+					ctx.clearRect(0, 0, canvas.width, canvas.height);
+					ctx.fillStyle = "rgba(0,0,0,0)";
+					ctx.fillRect(0, 0, canvas.width, canvas.height);
+				}
+				resizeCanvas();
+
+       			var ani = new Ani();
+       			var bullets = [],
+       				_bullet = function(){
+       					this.deg = 0;
+       					this.v = 15;
+       					this.x = -14;
+       					this.y = -200 + -50/2;
+       					this.w = 25;
+       					this.h = 50;
+       					this.diagonal = Math.floor(Math.sqrt(this.w*this.w + this.h*this.h));//子弹对角线，
+       					this.isLaunch = false;
+       					this.isDestory = false;
+       				};
+
+       			function launch(){
+       				var __bullet = new _bullet();
+       				bullets.push(__bullet);
+       			}
+       			function bullet(){
+       				var boundaryW = ani.w / 2,
+       					// boundaryH = ani.h / 2,
+       					len = bullets.length;
+       				for(var i = 0; i < len; i++){
+       					var obj = bullets[i];
+       					var bulletLong = Math.sqrt(obj.x*obj.x + obj.y*obj.y); // 子弹在旋转状态下运动的轨迹长度
+
+       					if( bulletLong - obj.diagonal > boundaryW || obj.isDestory){// 超出界面外
+		                    // return false;
+		                    bullets.splice(i, 1);
+       						i -= 1;
+       						len -= 1;
+		                }else{
+		                	var rotation = obj.rotation,//旋转角度
+		                		_cos = Math.cos(rotation),
+		                		_sin = Math.sin(rotation),
+		                		_x = obj.x * _cos - obj.y * _sin,
+		                		_y = obj.y * _cos + obj.x * _sin;
+		                	
+		                	for(var j = 0, _len = meteorites.length; j < _len; j++){
+		                		var ___meteorite = meteorites[j],//陨石
+		                			dx = _x - ___meteorite.x - ___meteorite.w/2, //子弹的实际位置 -  陨石实际位置
+							    	dy = _y - ___meteorite.y - ___meteorite.h/2,
+							    	dist = Math.sqrt(dx*dx + dy*dy);
+
+							    // console.log(dist + ', ' + ___meteorite.diagonal/2)
+							    if(!___meteorite.hited){
+							    	if(dist < ___meteorite.diagonal / 2){
+								    	booms.push(___meteorite);
+										meteorites.splice(j, 1);
+										j -= 1;
+										_len -= 1;
+								    	___meteorite.hited = true;
+								    	obj.isDestory = true;
+								    	break;
+								    }
+							    }
+							    
+							    
+		                	}
+		                	bullet_draw(obj, i);
+		                }
+       					
+       				}
+       			}
+       			function bullet_draw(obj, index){
+       				if(!obj.isDestory){
+       					var sprite = ani.sprite;
+						var dy = mouse.y - ani.h/2,
+							dx = mouse.x - ani.w/2, 
+							rotation = 0;
+
+						if(!obj.isLaunch){// 是否已经处于发射状态
+							obj.rotation = rotation = Math.atan2(dy, dx) + 90*Math.PI / 180;
+							obj.isLaunch = true;
+						}else{
+							rotation = obj.rotation;
+						}
+
+						ctx.save();
+						ctx.translate(ani.w/2,ani.h/2);
+						ctx.rotate(rotation);
+						ctx.drawImage(
+							sprite, 
+							211,
+							79,
+							45,
+							100,
+							obj.x,
+							obj.y -= obj.v,
+							25,
+							50
+						);
+						ctx.restore();
+       				}else{
+
+       				}
+       			}
+       			var _planet  = {
+       				deg: 0,
+       				x: -100,
+       				y: -100,
+       				radius: 100,
+       				realX: ani.w /2,
+			    	realY: ani.h /2
+       			};
+       			function planet() {
+       				var sprite = ani.sprite;
+
+			        ctx.save();
+			        ctx.fillStyle   = 'white';
+			        ctx.shadowBlur    = 100;
+			        ctx.shadowOffsetX = 0;
+			        ctx.shadowOffsetY = 0;
+			        ctx.shadowColor   = "#999";
+
+			        ctx.arc(
+			            (ani.w/2),
+			            (ani.h/2),
+			            100,
+			            0,
+			            Math.PI * 2
+			        );
+			        ctx.fill();
+
+			        //Planet rotation
+			        ctx.translate(ani.w/2, ani.h/2);
+			        ctx.rotate((_planet.deg += 0.1) * (Math.PI / 180));
+			        ctx.drawImage(
+			        	sprite, 
+			        	0, 
+			        	0, 
+			        	200, 
+			        	200, 
+			        	_planet.x, 
+			        	_planet.y, 
+			        	_planet.radius * 2,
+			        	_planet.radius * 2
+			        );
+			        ctx.restore();
+			    }
+
+			    var player = {
+			        posX: -35,
+			        posY: -(100+82),
+			        width: 70,
+			        height: 79,
+			        deg : 0
+			    },
+			    rocket = {
+			    	x: 4 + (-79/2),
+			    	y: -150 + (-79/2),
+			    	w: 79,
+			    	h: 79
+			    };
+
+			    function _rocket(){
+			    	var sprite = ani.sprite;
+			    	var dy = mouse.y - ani.h/2,
+						dx = mouse.x - ani.w/2,
+						rotation = Math.atan2(dy, dx) + 90*Math.PI / 180;
+
+					ctx.save();
+					ctx.translate(ani.w/2,ani.h/2);
+					ctx.rotate(rotation);
+					ctx.drawImage(
+						sprite, 
+						200,
+						0,
+						rocket.w,
+						rocket.h,
+						rocket.x,
+						rocket.y,
+						79,
+						79
+					);
+					ctx.restore();
+			    }
+			    var meteorites = [];
+			    var random = function(from, to){
+			    	return Math.floor(Math.random() * (to - from + 1) + from);
+			    }
+			    var meteorite = function(){
+			    	var proportion = Math.random() * .6 + .3;
+			    	var dir = random(1, 4), 
+			    		x = y = 0;
+
+			    	switch(dir){
+			    		case 1: //上
+			    			x = random(-ani.w /2, ani.w /2);
+			    			y = -ani.h /2;
+			    			break;
+	    				case 2: //右
+	    					x = ani.w /2;
+		    				y = random(-ani.h /2, ani.h /2);
+		    				break;
+	    				case 3: //下
+	    					x = random(-ani.w /2, ani.w /2);
+		    				y = ani.h /2;
+		    				break;
+	    				case 4: //左
+	    					x = -ani.w /2;
+		    				y = random(-ani.h /2, ani.h /2);
+		    				break;
+			    	}
+			    	this.oriW = 138;
+			    	this.oriH = 126;
+			    	this.proportion = proportion;
+			    	this.w = this.oriW * proportion;
+			    	this.h = this.oriH * proportion;
+			    	this.v = random(1, 2);
+			    	this.x = x;
+			    	this.y = y;
+			    	this.diagonal = Math.floor(Math.sqrt(this.w*this.w + this.h*this.h));//陨石对角线，
+			    	this.centerX = this.x + ani.w /2 + this.w/2; 
+			    	this.centerY = this.y + ani.h /2 + this.h/2; ////实际位置
+			    	this.isDestory = false;
+			    	this.over = false;
+			    }
+			    function _meteorite(){
+			    	if(meteorites.length < ani._meteorite){
+			    		meteorites_new();
+			    	}
+			    	var len = meteorites.length;
+
+       				for(var i = 0; i < len; i++){
+       					var obj = meteorites[i];
+       					var dx = obj.centerX - _planet.realX,
+			    			dy = obj.centerY - _planet.realY,
+			    			
+			    		dist = Math.sqrt(dx*dx + dy*dy);
+
+			    		if( dist < _planet.radius || dist + obj.diagonal/2 < _planet.radius){
+		                    booms.push(obj);
+		                    meteorites.splice(i, 1);
+							i -= 1;
+							len -= 1;
+		                    //obj.isDestory = true;
+		                }else{
+		                	meteorite_draw(obj, i);
+		                } 
+       				}
+			    }
+			    function meteorites_new(){
+			    	var __meteorite = new meteorite();
+
+			    	meteorites.push(__meteorite);
+			    }
+			    function meteorite_draw(self, index){
+			    	ctx.save();
+					ctx.translate(ani.w/2,ani.h/2);
+
+			    	var sprite = ani.sprite,
+			    		dy = self.y,
+						dx = self.x,
+						rotation = Math.atan2(dy, dx);
+			    	var vx = self.v * Math.cos(rotation),
+			    		vy = self.v * Math.sin(rotation);
+			    		
+			    	self.centerX -= vx;
+					self.centerY -= vy;
+			    	ctx.drawImage(
+						sprite, 
+						280,
+						0,
+						self.oriW,
+						self.oriH,
+						self.x -= vx,
+						self.y -= vy,
+						self.w,
+						self.h
+					);
+					ctx.restore();
+			    }
+       			(function drawFram(){
+       				var sprite = ani.sprite,
+       					boom = ani.boom;
+					window.requestAnimationFrame(drawFram,canvas);
+					ctx.clearRect(0,0,canvas.width,canvas.height);
+
+					ctx.beginPath();
+
+                	planet();
+                	_rocket();
+                	bullet();
+                	_meteorite();
+                	booms.forEach(ani._boom);
+	            })();
+       		}
+        </script>
+	</body>
+</html>
+<!-- 
+ctx.save();
+ctx.lineWidth = 1;
+ctx.strokeStyle = '#fff';
+ctx.beginPath();
+ctx.moveTo(ani.w/2, ani.h/2);
+ctx.lineTo(0, 0);
+ctx.closePath()
+ctx.stroke()
+ctx.restore(); -->

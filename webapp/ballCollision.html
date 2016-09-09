@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,user-scalable=no" />
+		<title></title>
+		<link rel="stylesheet" href="statics/css/common.css">
+		<style>
+			html, body{
+				height: 100%;
+				width: 100%
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="canvas" style="background: url(statics/img/dota2hq.eu-rylai-the-moonlight-maiden-3d-art-1920x1080.jpg) 0 0 no-repeat; background-size: cover; width: 100%; ">
+           <p>you browser not support canvas!<p>
+       </canvas>
+       <script src='statics/js/utils.js'></script>
+       <script>
+       		window.onload = function(){
+       			var canvas = document.getElementById('canvas'),
+       				ctx = canvas.getContext('2d');
+       				mouse = utils.captureMouse(canvas);
+
+       			canvas.width = document.body.offsetWidth;
+       			canvas.height = document.body.offsetHeight - 10;
+
+       			function Ani(){
+       				this.init = function(){
+
+       				};
+       				this.bounce = -0.6; //反弹系数
+       				this.gravity  = .2; //重力加速度
+       				this.w = canvas.width;
+	                this.h = canvas.height;
+       				// this.randomNum = Math.random() * (this.w / _radius / 2) / 8; 
+       				this.randomNum = Math.random() * (this.w / 5); 
+       				// this.randomNum = 3;
+       				this.line = {
+       					oriX: 100,
+       					oriY: 400,
+       					x: this.h,
+       					y: 400,
+       					roration: 0, //斜线与平面夹角
+       					color: 'rgba(255,255,255, .5)',
+       					lineWidth: 1,
+       					cos: 0,
+       					sin: 0
+       				};
+       				this.ball = {
+       					x: 100,
+						y: 0,
+						// vx: Math.random() * 5,
+						vx: 0,
+						vy: Math.random() * 2,
+						radius: 20,
+						mass: 1,
+						color: 'rgba(255,255,255, .5)',
+						lineWidth: 1
+       				}
+       				this.init();
+       			}  			
+       			Ani.prototype.drawBall = function(){
+       				var ball = ani.ball;
+
+       				ctx.save();
+				    ctx.lineWidth = ball.lineWidth;
+				    ctx.fillStyle = ball.color;
+				    // ctx.strokeStyle = ball.color;
+				    ctx.beginPath();
+				    ctx.arc(ball.x,ball.y,ball.radius,0,Math.PI*2,false);
+				    ctx.closePath();
+				    ctx.fill();
+				    // ctx.stroke();
+				    ctx.restore();
+       			}
+       			Ani.prototype.drawLine = function(){
+					var line = ani.line;
+						
+					line.x = !mouse.x ? line.x : mouse.x;
+					line.y = !mouse.y ? line.y : mouse.y;
+					line.roration = Math.atan2(line.y - line.oriY, line.x - line.oriX);
+					line.cos = Math.cos(line.roration);
+					line.sin = Math.sin(line.roration);
+
+					ctx.save();
+					ctx.lineWidth = .3;
+					ctx.strokeStyle = line.color;
+					ctx.beginPath();
+					ctx.moveTo(line.oriX, line.oriY);
+					ctx.lineTo(line.x, line.y);
+					ctx.closePath();
+					ctx.stroke()
+					ctx.restore();
+				}
+				Ani.prototype.wallCollsion = function(){
+					var ball = this.ball;
+	                if(ball.x + ball.radius > this.w){
+	                    ball.x = this.w - ball.radius;
+	                    ball.vx *= this.bounce;
+	                }else if(ball.x < ball.radius){
+	                    ball.x = ball.radius;
+	                    ball.vx *= this.bounce;
+	                }
+	                
+	                if(ball.y + ball.radius > this.h){
+	                    ball.y = this.h - ball.radius;
+	                    ball.vy *= this.bounce;
+	                }else if(ball.y < ball.radius){
+	                    ball.y = ball.radius;
+	                    ball.vy *= this.bounce;
+	                } 
+	            }
+				Ani.prototype.render = function(){
+					var ball = this.ball,
+						line = this.line,
+						cos = line.cos,
+						sin = line.sin;
+
+		            ball.vy += this.gravity;
+		            ball.y += ball.vy;
+		            ball.x += ball.vx
+
+		            var x1 = ball.x - line.x,
+        				y1 = ball.y - line.y,
+        				// AngleBL = Math.atan2(x1, y1); //球与线终点 的夹角
+        				// distBL = Math.sqrt(x1* x1 + y1 * y1);
+        				// distVBL = Math.cos(AngleBL)* distBL; //垂直距离
+        				y2 = y1* cos - x1* sin;
+        				
+        			if( line.oriX < ball.x + ball.radius && line.x > ball.x)
+						if(y2 > -ball.radius && y2 < 0){   //只有当小球与平面接触时才做旋转
+
+							var x2 = x1*cos + y1*sin,             //旋转 x 坐标
+								vy1 = ball.vy * cos - ball.vx * sin,
+        						vx1 = ball.vx*cos + ball.vy*sin;      //旋转速度
+							     							      
+							y2 = -ball.radius;
+							vy1 *= this.bounce;
+							      
+							//所有东西旋转回去
+							x1 = x2*cos - y2*sin;
+							y1 = y2*cos + x2*sin;
+							ball.vx = vx1*cos - vy1*sin;
+							ball.vy = vy1*cos + vx1*sin;
+							ball.x = line.x + x1;
+							ball.y = line.y + y1;
+						}
+       			}
+
+				var ani = new Ani();
+
+       			(function drawFram(){
+					window.requestAnimationFrame(drawFram,canvas);
+					ctx.clearRect(0,0,canvas.width,canvas.height);
+		             
+		            ani.drawLine();  
+		            ani.wallCollsion();
+					ani.render();
+		            ani.drawBall();
+	            })();
+       		}
+        </script>
+	</body>
+</html>
