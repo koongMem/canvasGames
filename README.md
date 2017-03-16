@@ -15,66 +15,77 @@ https://codepen.io/koongMem/full/ALWAYz/
 # 通用运算公式
 
 ## 角度旋转
-    dx = mouse.x - object.x;
-    dy = mouse.y - object.y;
-    object.rotation = Math.atan2(dy,dx)*180/Math.PI
-
+```js
+dx = mouse.x - object.x;
+dy = mouse.y - object.y;
+object.rotation = Math.atan2(dy,dx)*180/Math.PI
+```
 ## 平滑运动
-       value = center + Math.sin(angle)*range;
-       angle += speed;
-
+```js
+value = center + Math.sin(angle)*range;
+angle += speed;
+```
 ## 正圆运动
-       x_position = centerX + Math.sin(angle)*radius;
-       y_position = centerY + Math.cos(angle)*radius;
-       angle += speed;
-
+```js
+x_position = centerX + Math.sin(angle)*radius;
+y_position = centerY + Math.cos(angle)*radius;
+angle += speed;
+```
 ## 椭圆运动
-       x_position = centerX + Math.cos(angle)*radiusX;
-       y_position = centerY + Math.sin(angle)*radiusY;
-       angle += speed;
-
+```js
+x_position = centerX + Math.cos(angle)*radiusX;
+y_position = centerY + Math.sin(angle)*radiusY;
+angle += speed;
+```
 ## 两点间距离
-    dx = x2 - x1;
-    dy = y2 - y1;
-    dist = Math.sqrt(dx*dx + dy*dy);
-    
+```js
+dx = x2 - x1;
+dy = y2 - y1;
+dist = Math.sqrt(dx*dx + dy*dy);
+```
 ## 任意方向速度
-    vx = speed * Math.cos(angle);
-    vy = speed * Math.sin(angle);
-
+```js
+vx = speed * Math.cos(angle);
+vy = speed * Math.sin(angle);
+```
 ## 任意方向加速度
-    ax = force * Math.cos(angle);
-    ay = force * Math.xin(angle);
-
+```js
+ax = force * Math.cos(angle);
+ay = force * Math.xin(angle);
+```
 ## 改变速度
-    vx += ax;
-    vx += ay;
-
+```js
+vx += ax;
+vx += ay;
+```
 ## 改变位置
-    object.x += vx;
-    object.y += vy;
-    /*1.移除一个超过边界的物体*/
-    if(object.x - object.width/2 > right || 
-       object.x + object.width/2 < left ||
-       object.y - object.height/2 > bottom ||
-       object.y + object.height/2 < top){/*移除物体代码*/}
+```js
+object.x += vx;
+object.y += vy;
+/*1.移除一个超过边界的物体*/
+if(object.x - object.width/2 > right || 
+   object.x + object.width/2 < left ||
+   object.y - object.height/2 > bottom ||
+   object.y + object.height/2 < top){/*移除物体代码*/}
 
-    /* 2.重现一个超出边界的物体*/
-    if(object.x - object.width/2 > right || 
-       object.x + object.width/2 < left ||
-       object.y - object.height/2 > bottom ||
-       object.y + object.height/2 < top){
-        /*重新设置对象的位置和速度*/
-       }
+/* 2.重现一个超出边界的物体*/
+if(object.x - object.width/2 > right || 
+   object.x + object.width/2 < left ||
+   object.y - object.height/2 > bottom ||
+   object.y + object.height/2 < top){
+    /*重新设置对象的位置和速度*/
+   }
 
-    /*3. 边界环绕*/
-    if(object.x - object.width/2 > right){
-        object.x = left - object.width/2;
-    }elseif(object.x + object.width/2 < left){
-        object.x = object.width/2 + right;
-    }
-    if(object.y - object.height/2 > bottom){
-        object.y = top - object.height/2;
-    }elseif(object.y + object.height/2 < top){
-        object.y = object.height/2 + bottom;
-    }
+/*3. 边界环绕*/
+if(object.x - object.width/2 > right){
+    object.x = left - object.width/2;
+}elseif(object.x + object.width/2 < left){
+    object.x = object.width/2 + right;
+}
+
+if(object.y - object.height/2 > bottom){
+    object.y = top - object.height/2;
+}elseif(object.y + object.height/2 < top){
+    object.y = object.height/2 + bottom;
+}
+```
