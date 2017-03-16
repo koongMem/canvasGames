@@ -12,7 +12,7 @@ https://codepen.io/koongMem/full/ALWAYz/
 不知道怎么改私有呀。。。。
 
 
-通用运算公式
+# 通用运算公式
 
 ## 角度旋转
     dx = mouse.x - object.x;
